@@ -1,0 +1,43 @@
+<assembly>
+	<id>dist</id>
+	<formats>
+		<format>tar.gz</format>
+		<format>tar.bz2</format>
+		<format>zip</format>
+	</formats>
+
+	<includeBaseDirectory>true</includeBaseDirectory>
+
+	<dependencySets>
+		<dependencySet>
+			<!--Include runtime dependencies -->
+			<outputDirectory>lib</outputDirectory>
+			<scope>runtime</scope>
+		</dependencySet>
+	</dependencySets>
+
+	<fileSets>
+		<fileSet>
+			<!--Get the generated application jar -->
+			<directory>${project.build.directory}</directory>
+			<outputDirectory>./</outputDirectory>
+			<includes>
+				<include>*.jar</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<!--Get application resources -->
+			<directory>src/main/resources</directory>
+			<outputDirectory>resources</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<!--Get misc user files -->
+			<directory>${project.basedir}</directory>
+			<outputDirectory>./</outputDirectory>
+			<includes>
+				<include>README*</include>
+				<include>LICENSE*</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+</assembly>
