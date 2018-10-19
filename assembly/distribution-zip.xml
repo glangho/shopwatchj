@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+
 <assembly>
 	<id>dist</id>
 	<formats>
@@ -29,6 +32,9 @@
 			<!--Get application resources -->
 			<directory>src/main/resources</directory>
 			<outputDirectory>resources</outputDirectory>
+			<includes>
+				<include>**/*example*.json</include>
+			</includes>
 		</fileSet>
 		<fileSet>
 			<!--Get misc user files -->
