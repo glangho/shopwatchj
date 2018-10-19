@@ -30,9 +30,13 @@ public class Watch implements Runnable {
 	public static final String CYCLE_TIME_DEFAULT = "30000";
 	public static final String STOCK_CYCLE_TIME_DEFAULT = "3600000";
 	public static final String SILENT_DEFAULT = "false";
+	public static final String CONNECTION_TIMEOUT_DEFAULT = "10000";
+	public static final String SOCKET_TIMEOUT_DEFAULT = "60000";
 
 	public final long cycleTime;
 	public final long stockCycleTime;
+	public final long connectionTimeout;
+	public final long socketTimeout;
 
 	public final String site;
 	public final List<String> siteMaps;
@@ -62,11 +66,14 @@ public class Watch implements Runnable {
 		silent = Boolean.parseBoolean(config.getParameter("silent", SILENT_DEFAULT));
 		cycleTime = Long.parseLong(config.getParameter("cycleTime", CYCLE_TIME_DEFAULT));
 		stockCycleTime = Long.parseLong(config.getParameter("stockCycleTime", STOCK_CYCLE_TIME_DEFAULT));
+		connectionTimeout = Long.parseLong(config.getParameter("connectionTimeout", CONNECTION_TIMEOUT_DEFAULT));
+		socketTimeout = Long.parseLong(config.getParameter("socketTimeout", SOCKET_TIMEOUT_DEFAULT));
 
 		Unirest.setObjectMapper(new WatchMapper());
 		HttpClient httpclient = HttpClients.custom().disableCookieManagement().build();
 
 		Unirest.setHttpClient(httpclient);
+		Unirest.setTimeouts(connectionTimeout, socketTimeout);
 	}
 
 	@Override

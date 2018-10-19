@@ -7,7 +7,9 @@
 		"parameters": {
 			"silent": false,
 			"cycleTime": "30000",
-			"stockCycleTime": "3600000"
+			"stockCycleTime": "3600000",
+			"connectionTimeout": "15000",
+			"socketTimeout": "60000"
 		}
 	},
 	"listeners": [
