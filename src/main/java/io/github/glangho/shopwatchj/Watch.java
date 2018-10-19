@@ -12,34 +12,24 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
-
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-
 import io.github.glangho.shopwatchj.config.ShopConfig;
 import io.github.glangho.shopwatchj.shopify.Product;
 import io.github.glangho.shopwatchj.shopify.ProductList;
 import io.github.glangho.shopwatchj.shopify.Variant;
 import io.github.glangho.shopwatchj.shopify.sitemap.SiteQueue;
 import io.github.glangho.shopwatchj.shopify.sitemap.Url;
+import io.github.glangho.shopwatchj.util.WatchUtil;
 
 public class Watch implements Runnable {
 	public static final String CYCLE_TIME_DEFAULT = "30000";
 	public static final String STOCK_CYCLE_TIME_DEFAULT = "3600000";
 	public static final String SILENT_DEFAULT = "false";
-	public static final String CONNECTION_TIMEOUT_DEFAULT = "10000";
-	public static final String SOCKET_TIMEOUT_DEFAULT = "60000";
 
-	public final long cycleTime;
-	public final long stockCycleTime;
-	public final long connectionTimeout;
-	public final long socketTimeout;
+	private final long cycleTime;
+	private final long stockCycleTime;
 
-	public final String site;
-	public final List<String> siteMaps;
+	private final String site;
+	private final List<String> siteMaps;
 
 	private ZonedDateTime lastUpdate;
 	private ZonedDateTime lastStockUpdate;
@@ -66,14 +56,6 @@ public class Watch implements Runnable {
 		silent = Boolean.parseBoolean(config.getParameter("silent", SILENT_DEFAULT));
 		cycleTime = Long.parseLong(config.getParameter("cycleTime", CYCLE_TIME_DEFAULT));
 		stockCycleTime = Long.parseLong(config.getParameter("stockCycleTime", STOCK_CYCLE_TIME_DEFAULT));
-		connectionTimeout = Long.parseLong(config.getParameter("connectionTimeout", CONNECTION_TIMEOUT_DEFAULT));
-		socketTimeout = Long.parseLong(config.getParameter("socketTimeout", SOCKET_TIMEOUT_DEFAULT));
-
-		Unirest.setObjectMapper(new WatchMapper());
-		HttpClient httpclient = HttpClients.custom().disableCookieManagement().build();
-
-		Unirest.setHttpClient(httpclient);
-		Unirest.setTimeouts(connectionTimeout, socketTimeout);
 	}
 
 	@Override
@@ -117,14 +99,10 @@ public class Watch implements Runnable {
 		Queue<Url> urls = new PriorityQueue<>();
 
 		for (String siteMap : siteMaps) {
-			try {
-				HttpResponse<SiteQueue> response = Unirest.get("https://" + site + "/" + siteMap)
-						.asObject(SiteQueue.class);
+			String url = "https://" + site + "/" + siteMap;
+			Queue<Url> tmpUrls = WatchUtil.get(SiteQueue.class, url).getBody();
 
-				urls.addAll(response.getBody());
-			} catch (UnirestException e) {
-				throw new RuntimeException(e);
-			}
+			urls.addAll(tmpUrls);
 		}
 
 		if (urls.isEmpty()) {
@@ -256,20 +234,13 @@ public class Watch implements Runnable {
 	}
 
 	private ProductList getProductsByPage(int page) {
-		try {
-			return Unirest.get("https://" + site + "/products.json?page=" + page).asObject(ProductList.class).getBody();
-		} catch (UnirestException e) {
-			throw new RuntimeException(e);
-		}
+		String url = "https://" + site + "/products.json?page=" + page;
+		return WatchUtil.get(ProductList.class, url).getBody();
 	}
 
 	private Product getProductWithInventory(Product product) {
-		try {
-			return Unirest.get("https://" + site + "/products/" + product.getHandle() + ".json").asObject(Product.class)
-					.getBody();
-		} catch (UnirestException e) {
-			throw new RuntimeException(e);
-		}
+		String url = "https://" + site + "/products/" + product.getHandle() + ".json";
+		return WatchUtil.get(Product.class, url).getBody();
 	}
 
 	public boolean addListener(WatchListener listener) {
