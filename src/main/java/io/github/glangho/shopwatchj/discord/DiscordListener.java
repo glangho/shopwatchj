@@ -123,6 +123,18 @@ public class DiscordListener implements WatchListener {
 				try {
 					HttpResponse<WebHook> response = sendMe(webHook);
 
+					int status = response.getStatus();
+					if (status == 429) {
+						Thread.sleep(maxSleep);
+						send(webHook);
+					} else if (status / 100 != 2) {
+						if (lastAttempt) {
+							throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+						} else {
+							continue;
+						}
+					}
+
 					Headers headers = response.getHeaders();
 
 					if (headers.containsKey("X-RateLimit-Remaining")) {
@@ -135,6 +147,10 @@ public class DiscordListener implements WatchListener {
 
 					return;
 				} catch (UnirestException e) {
+					if (lastAttempt) {
+						throw new RuntimeException(e);
+					}
+				} catch (InterruptedException e) {
 					if (lastAttempt) {
 						throw new RuntimeException(e);
 					}

@@ -56,7 +56,18 @@ public class WatchUtil {
 			boolean lastAttempt = (i == retryAttempts - 1) ? true : false;
 
 			try {
-				return getMe(clazz, url, lastAttempt);
+				HttpResponse<T> response = getMe(clazz, url, lastAttempt);
+				int status = response.getStatus();
+
+				if (status / 100 != 2) {
+					if (lastAttempt) {
+						throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+					} else {
+						continue;
+					}
+				}
+
+				return response;
 			} catch (UnirestException e1) {
 				e = e1;
 			}
