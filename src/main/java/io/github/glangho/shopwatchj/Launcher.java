@@ -1,6 +1,7 @@
 package io.github.glangho.shopwatchj;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.http.client.HttpClient;
@@ -77,6 +78,16 @@ public class Launcher {
 		HttpClient httpclient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
 		Unirest.setHttpClient(httpclient);
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				try {
+					Unirest.shutdown();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
 
 		// start watch
 		new Thread(watch).start();
