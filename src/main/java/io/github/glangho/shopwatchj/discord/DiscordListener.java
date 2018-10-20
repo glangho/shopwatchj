@@ -21,6 +21,7 @@ import io.github.glangho.shopwatchj.discord.webhook.Field;
 import io.github.glangho.shopwatchj.discord.webhook.WebHook;
 import io.github.glangho.shopwatchj.shopify.Product;
 import io.github.glangho.shopwatchj.shopify.Variant;
+import io.github.glangho.shopwatchj.util.WatchUtil;
 
 public class DiscordListener implements WatchListener {
 	public static final String MAX_SLEEP_DEFAULT = "3000";
@@ -115,22 +116,45 @@ public class DiscordListener implements WatchListener {
 		long current = System.currentTimeMillis();
 
 		if (remaining > 0 || current > reset) {
-			try {
-				HttpResponse<WebHook> response = Unirest.post(endpoint).header("Content-Type", "application/json")
-						.body(webHook).asObject(WebHook.class);
 
-				Headers headers = response.getHeaders();
+			for (int i = 0; i < WatchUtil.retryAttempts; i++) {
+				boolean lastAttempt = (i == WatchUtil.retryAttempts - 1) ? true : false;
 
-				if (headers.containsKey("X-RateLimit-Remaining")) {
-					remaining = Integer.valueOf(headers.getFirst("X-RateLimit-Remaining"));
+				try {
+					HttpResponse<WebHook> response = sendMe(webHook);
+
+					int status = response.getStatus();
+					if (status == 429) {
+						Thread.sleep(maxSleep);
+						send(webHook);
+					} else if (status / 100 != 2) {
+						if (lastAttempt) {
+							throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+						} else {
+							continue;
+						}
+					}
+
+					Headers headers = response.getHeaders();
+
+					if (headers.containsKey("X-RateLimit-Remaining")) {
+						remaining = Integer.valueOf(headers.getFirst("X-RateLimit-Remaining"));
+					}
+
+					if (headers.containsKey("X-RateLimit-Reset")) {
+						reset = Long.valueOf(headers.getFirst("X-RateLimit-Reset")) * 1000l;
+					}
+
+					return;
+				} catch (UnirestException e) {
+					if (lastAttempt) {
+						throw new RuntimeException(e);
+					}
+				} catch (InterruptedException e) {
+					if (lastAttempt) {
+						throw new RuntimeException(e);
+					}
 				}
-
-				if (headers.containsKey("X-RateLimit-Reset")) {
-					reset = Long.valueOf(headers.getFirst("X-RateLimit-Reset")) * 1000l;
-				}
-
-			} catch (UnirestException e) {
-				throw new RuntimeException(e);
 			}
 		} else {
 			long sleep = reset - current;
@@ -141,6 +165,10 @@ public class DiscordListener implements WatchListener {
 				throw new RuntimeException(e);
 			}
 		}
+	}
+
+	private HttpResponse<WebHook> sendMe(WebHook webHook) throws UnirestException {
+		return Unirest.post(endpoint).header("Content-Type", "application/json").body(webHook).asObject(WebHook.class);
 	}
 
 	private Embed createEmbed(WatchEvent event) {

@@ -12,10 +12,21 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.github.glangho.shopwatchj.WatchMapperInfo;
 
 public class WatchUtil {
+	public static final int CONNECT_TIMEOUT_DEFAULT = 10000;
+	public static final int SOCKET_TIMEOUT_DEFAULT = 60000;
+	public static final int RETRY_ATTEMPTS_DEFAULT = 5;
+
+	public static int connectTimeout = CONNECT_TIMEOUT_DEFAULT;
+	public static int socketTimeout = SOCKET_TIMEOUT_DEFAULT;
+	public static int retryAttempts = RETRY_ATTEMPTS_DEFAULT;
+
 	private static ObjectMapper jsonMapper;
 	private static ObjectWriter jsonWriter;
 	private static ObjectMapper xmlMapper;
@@ -37,6 +48,35 @@ public class WatchUtil {
 				.registerModule(new ParameterNamesModule()).registerModule(new Jdk8Module());
 
 		xmlWriter = xmlMapper.writerWithDefaultPrettyPrinter();
+	}
+
+	public static <T> HttpResponse<T> get(Class<T> clazz, String url) {
+		Exception e = null;
+		for (int i = 0; i < retryAttempts; i++) {
+			boolean lastAttempt = (i == retryAttempts - 1) ? true : false;
+
+			try {
+				HttpResponse<T> response = getMe(clazz, url, lastAttempt);
+				int status = response.getStatus();
+
+				if (status / 100 != 2) {
+					if (lastAttempt) {
+						throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+					} else {
+						continue;
+					}
+				}
+
+				return response;
+			} catch (UnirestException e1) {
+				e = e1;
+			}
+		}
+		throw new RuntimeException(e);
+	}
+
+	private static <T> HttpResponse<T> getMe(Class<T> clazz, String url, boolean last) throws UnirestException {
+		return Unirest.get(url).asObject(clazz);
 	}
 
 	public static void print(Object obj) {
