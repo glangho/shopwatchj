@@ -1,37 +1,80 @@
-## Welcome to GitHub Pages
+# ShopWatchj
 
-You can use the [editor on GitHub](https://github.com/glangho/shopwatchj/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Java monitoring bot for Shopify.  Create your own notification plugins using the WatchListener interface or use the supplied plugins.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Getting Started
 
-### Markdown
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Prerequisites
 
-```markdown
-Syntax highlighted code block
+The pom file contains all dependencies required to run.  The bot relies on the Jackson and Unirest libraries below:
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```
+	<dependencies>
+		<dependency>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.module</groupId>
+			<artifactId>jackson-module-parameter-names</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jdk8</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+	</dependencies>
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+### Installing
 
-### Jekyll Themes
+Simply build the binaries using mvn clean install.  Distribution files will be created in the ../target directory
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/glangho/shopwatchj/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+```
+mvn clean install
+```
 
-### Support or Contact
+## Deployment
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Run the bot using java -jar option from command line or via shell script
+
+```
+java -jar shopwatchj.jar
+```
+
+## Built With
+
+* [Maven](https://maven.apache.org/) - Dependency Management
+
+## License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details
