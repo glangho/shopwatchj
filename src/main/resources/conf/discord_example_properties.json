@@ -8,7 +8,7 @@
 			"silent": false,
 			"cycleTime": "30000",
 			"stockCycleTime": "3600000",
-			"connectionTimeout": "15000",
+			"connectTimeout": "15000",
 			"socketTimeout": "60000",
 			"retryAttempts": "5"
 		}
@@ -16,7 +16,7 @@
 	"listeners": [
 		{
 			"name": "DiscordListener",
-			"class": "com.glang.watch.discord.DiscordListener",
+			"class": "io.github.glangho.shopwatchj.discord.DiscordListener",
 			"parameters": {
 				"maxSleep": "10000",
 				"maxEvents": "10",
