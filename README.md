@@ -65,6 +65,8 @@ mvn clean install
 
 ## Deployment
 
+You must create a /resources/conf/properties.json file.  Refer to the Wiki to create your own or rename one of the supplied example property files within the distribution.
+
 Run the bot using java -jar option from command line or via shell script
 
 ```
