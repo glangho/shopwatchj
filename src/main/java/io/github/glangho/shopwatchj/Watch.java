@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.github.glangho.shopwatchj.config.ShopConfig;
 import io.github.glangho.shopwatchj.shopify.Product;
@@ -21,6 +25,8 @@ import io.github.glangho.shopwatchj.shopify.sitemap.Url;
 import io.github.glangho.shopwatchj.util.WatchUtil;
 
 public class Watch implements Runnable {
+	private final static Logger LOGGER = Logger.getLogger(Watch.class.getName());
+
 	public static final String CYCLE_TIME_DEFAULT = "30000";
 	public static final String STOCK_CYCLE_TIME_DEFAULT = "3600000";
 	public static final String SILENT_DEFAULT = "false";
@@ -100,14 +106,15 @@ public class Watch implements Runnable {
 
 		for (String siteMap : siteMaps) {
 			String url = "https://" + site + "/" + siteMap;
-			Queue<Url> tmpUrls = WatchUtil.get(SiteQueue.class, url).getBody();
+			Queue<Url> tmpUrls;
+			try {
+				tmpUrls = WatchUtil.get(SiteQueue.class, url).getBody();
+			} catch (UnirestException e) {
+				LOGGER.log(Level.WARNING, e.getMessage(), e);
+				return;
+			}
 
 			urls.addAll(tmpUrls);
-		}
-
-		if (urls.isEmpty()) {
-			throw new RuntimeException("No valid sitemaps found for " + site
-					+ ".  Please verify product sitemaps at: https://" + site + "/sitemap.xml");
 		}
 
 		Url latest = urls.poll();
@@ -116,13 +123,18 @@ public class Watch implements Runnable {
 
 		// check for any changes since last update
 		if (lastUpdate == null || thisUpdate.isAfter(lastUpdate)) {
-			refreshProducts(currentCycle);
+			try {
+				refreshProducts(currentCycle);
+			} catch (UnirestException e) {
+				LOGGER.log(Level.WARNING, e.getMessage(), e);
+				return;
+			}
 
 			lastUpdate = thisUpdate;
 		}
 	}
 
-	private void refreshProducts(long currentCycle) {
+	private void refreshProducts(long currentCycle) throws UnirestException {
 		boolean stockUpdated = false;
 		ZonedDateTime latestUpdatedAt = null;
 
@@ -233,12 +245,12 @@ public class Watch implements Runnable {
 		}
 	}
 
-	private ProductList getProductsByPage(int page) {
+	private ProductList getProductsByPage(int page) throws UnirestException {
 		String url = "https://" + site + "/products.json?page=" + page;
 		return WatchUtil.get(ProductList.class, url).getBody();
 	}
 
-	private Product getProductWithInventory(Product product) {
+	private Product getProductWithInventory(Product product) throws UnirestException {
 		String url = "https://" + site + "/products/" + product.getHandle() + ".json";
 		return WatchUtil.get(Product.class, url).getBody();
 	}

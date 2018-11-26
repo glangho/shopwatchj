@@ -50,7 +50,7 @@ public class WatchUtil {
 		xmlWriter = xmlMapper.writerWithDefaultPrettyPrinter();
 	}
 
-	public static <T> HttpResponse<T> get(Class<T> clazz, String url) {
+	public static <T> HttpResponse<T> get(Class<T> clazz, String url) throws UnirestException {
 		Exception e = null;
 		for (int i = 0; i < retryAttempts; i++) {
 			boolean lastAttempt = (i == retryAttempts - 1) ? true : false;
@@ -61,7 +61,7 @@ public class WatchUtil {
 
 				if (status / 100 != 2) {
 					if (lastAttempt) {
-						throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+						throw new UnirestException("HTTP " + status + " " + response.getStatusText());
 					} else {
 						continue;
 					}
@@ -72,7 +72,7 @@ public class WatchUtil {
 				e = e1;
 			}
 		}
-		throw new RuntimeException(e);
+		throw new UnirestException(e);
 	}
 
 	private static <T> HttpResponse<T> getMe(Class<T> clazz, String url, boolean last) throws UnirestException {
