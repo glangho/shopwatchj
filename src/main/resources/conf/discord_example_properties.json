@@ -26,7 +26,8 @@
 				"ttsAlerts": false,
 				"customAlert": "@everyone Store has been updated!",
 				"alertFlags": "BACK_IN_STOCK,IN_STOCK",
-				"endpoint": "https://discordapp.com/api/webhooks/{webhook.id}/{webhook.token}"
+				"endpoint": "https://discordapp.com/api/webhooks/{webhook.id}/{webhook.token}",
+				"notifyErrors": "false"
 			}
 		}
 	]

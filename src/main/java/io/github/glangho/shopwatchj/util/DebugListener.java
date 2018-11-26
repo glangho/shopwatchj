@@ -28,4 +28,9 @@ public class DebugListener implements WatchListener {
 		}
 	}
 
+	@Override
+	public void handle(Exception e) {
+		e.printStackTrace(System.out);
+	}
+
 }

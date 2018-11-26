@@ -288,4 +288,9 @@ public class DiscordListener implements WatchListener {
 		return embed;
 	}
 
+	@Override
+	public void handle(Exception e) {
+		// TODO Auto-generated method stub
+	}
+
 }
