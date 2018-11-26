@@ -1,5 +1,7 @@
 package io.github.glangho.shopwatchj.discord;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -32,6 +34,7 @@ public class DiscordListener implements WatchListener {
 	public static final String TTS_ALERTS_DEFAULT = "false";
 	public static final String CUSTOM_ALERT_DEFAULT = "Store has been updated!";
 	public static final String ALERT_FLAGS_DEFAULT = "";
+	public static final String NOTIFY_ERRORS_DEFAULT = "false";
 
 	public final long maxSleep;
 	public final int maxEvents;
@@ -43,6 +46,7 @@ public class DiscordListener implements WatchListener {
 	public final boolean ttsAlerts;
 	public final String customAlert;
 	public final String endpoint;
+	public final boolean notifyErrors;
 
 	private int remaining;
 	private long reset;
@@ -66,6 +70,7 @@ public class DiscordListener implements WatchListener {
 		ttsAlerts = Boolean.parseBoolean(config.getParameter("ttsAlerts", TTS_ALERTS_DEFAULT));
 		customAlert = config.getParameter("customAlert", CUSTOM_ALERT_DEFAULT);
 		endpoint = config.getParameter("endpoint");
+		notifyErrors = Boolean.parseBoolean(config.getParameter("notifyErrors", NOTIFY_ERRORS_DEFAULT));
 
 		remaining = rateLimit;
 		reset = System.currentTimeMillis();
@@ -290,7 +295,16 @@ public class DiscordListener implements WatchListener {
 
 	@Override
 	public void handle(Exception e) {
-		// TODO Auto-generated method stub
+		if (notifyErrors) {
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			String fullStackTrace = sw.toString();
+
+			WebHook error = new WebHook();
+			error.setContent(fullStackTrace.substring(0, WebHook.MAX_CONTENT_LENGTH));
+
+			send(error);
+		}
 	}
 
 }
