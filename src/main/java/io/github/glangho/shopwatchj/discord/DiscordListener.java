@@ -1,11 +1,15 @@
 package io.github.glangho.shopwatchj.discord;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
@@ -24,6 +28,8 @@ import io.github.glangho.shopwatchj.shopify.Variant;
 import io.github.glangho.shopwatchj.util.WatchUtil;
 
 public class DiscordListener implements WatchListener {
+	private final static Logger LOGGER = Logger.getLogger(DiscordListener.class.getName());
+
 	public static final String MAX_SLEEP_DEFAULT = "3000";
 	public static final String MAX_EVENTS_DEFAULT = "10";
 	public static final String RATE_LIMIT_DEFAULT = "5";
@@ -32,6 +38,7 @@ public class DiscordListener implements WatchListener {
 	public static final String TTS_ALERTS_DEFAULT = "false";
 	public static final String CUSTOM_ALERT_DEFAULT = "Store has been updated!";
 	public static final String ALERT_FLAGS_DEFAULT = "";
+	public static final String NOTIFY_ERRORS_DEFAULT = "false";
 
 	public final long maxSleep;
 	public final int maxEvents;
@@ -43,6 +50,7 @@ public class DiscordListener implements WatchListener {
 	public final boolean ttsAlerts;
 	public final String customAlert;
 	public final String endpoint;
+	public final boolean notifyErrors;
 
 	private int remaining;
 	private long reset;
@@ -66,6 +74,7 @@ public class DiscordListener implements WatchListener {
 		ttsAlerts = Boolean.parseBoolean(config.getParameter("ttsAlerts", TTS_ALERTS_DEFAULT));
 		customAlert = config.getParameter("customAlert", CUSTOM_ALERT_DEFAULT);
 		endpoint = config.getParameter("endpoint");
+		notifyErrors = Boolean.parseBoolean(config.getParameter("notifyErrors", NOTIFY_ERRORS_DEFAULT));
 
 		remaining = rateLimit;
 		reset = System.currentTimeMillis();
@@ -129,7 +138,8 @@ public class DiscordListener implements WatchListener {
 						send(webHook);
 					} else if (status / 100 != 2) {
 						if (lastAttempt) {
-							throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+							LOGGER.warning("HTTP " + status + " " + response.getStatusText());
+							return;
 						} else {
 							continue;
 						}
@@ -148,12 +158,10 @@ public class DiscordListener implements WatchListener {
 					return;
 				} catch (UnirestException e) {
 					if (lastAttempt) {
-						throw new RuntimeException(e);
+						LOGGER.log(Level.WARNING, e.getMessage(), e);
 					}
 				} catch (InterruptedException e) {
-					if (lastAttempt) {
-						throw new RuntimeException(e);
-					}
+					throw new RuntimeException(e);
 				}
 			}
 		} else {
@@ -286,6 +294,40 @@ public class DiscordListener implements WatchListener {
 		embed.setTimestamp(ZonedDateTime.now());
 
 		return embed;
+	}
+
+	@Override
+	public void notifyErrors(Exception e) {
+		if (notifyErrors) {
+			WebHook webHook = new WebHook();
+			webHook.setContent("Uh-Oh, shopwatchj is experiencing technical difficulties.  "
+					+ "Please check server logs for details.  Attempting to reestablish connectivity...");
+
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			String fullStackTrace = sw.toString();
+
+			Embed embed = new Embed();
+			embed.setDescription(
+					"```java\n" + fullStackTrace.substring(0, (Embed.MAX_DESCRIPTION_LENGTH - 48)) + "```");
+
+			List<Embed> embeds = new ArrayList<>();
+			embeds.add(embed);
+
+			webHook.setEmbeds(embeds);
+
+			send(webHook);
+		}
+	}
+
+	@Override
+	public void notifyResolved() {
+		if (notifyErrors) {
+			WebHook resolved = new WebHook();
+			resolved.setContent("Good news, everyone!  Everything seems to be in order.");
+
+			send(resolved);
+		}
 	}
 
 }

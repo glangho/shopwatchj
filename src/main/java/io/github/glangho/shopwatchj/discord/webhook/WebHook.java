@@ -16,6 +16,8 @@ public class WebHook implements Serializable {
 	 */
 	private static final long serialVersionUID = 7445645519209783397L;
 
+	public static final int MAX_CONTENT_LENGTH = 2000;
+
 	private String content;
 	private String username;
 	@JsonProperty("avatar_url")

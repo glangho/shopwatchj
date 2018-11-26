@@ -28,4 +28,14 @@ public class DebugListener implements WatchListener {
 		}
 	}
 
+	@Override
+	public void notifyErrors(Exception e) {
+		e.printStackTrace(System.out);
+	}
+
+	@Override
+	public void notifyResolved() {
+		System.out.println("Everything seems in order.");
+	}
+
 }
