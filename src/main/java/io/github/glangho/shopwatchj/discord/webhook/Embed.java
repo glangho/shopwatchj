@@ -10,6 +10,8 @@ public class Embed implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 4182865205784378549L;
+	
+	public static final int MAX_DESCRIPTION_LENGTH = 2048;
 
 	private int color;
 	private Author author;

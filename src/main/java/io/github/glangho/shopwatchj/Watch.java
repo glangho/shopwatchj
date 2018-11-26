@@ -46,6 +46,7 @@ public class Watch implements Runnable {
 
 	private long lastCycle;
 	private long lastStockCycle;
+	private boolean error;
 
 	public Watch(ShopConfig config) {
 		lastUpdate = null;
@@ -62,6 +63,7 @@ public class Watch implements Runnable {
 		silent = Boolean.parseBoolean(config.getParameter("silent", SILENT_DEFAULT));
 		cycleTime = Long.parseLong(config.getParameter("cycleTime", CYCLE_TIME_DEFAULT));
 		stockCycleTime = Long.parseLong(config.getParameter("stockCycleTime", STOCK_CYCLE_TIME_DEFAULT));
+		error = false;
 	}
 
 	@Override
@@ -112,7 +114,7 @@ public class Watch implements Runnable {
 			} catch (UnirestException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
 
-				handleListeners(e);
+				notifyErrors(e);
 
 				return;
 			}
@@ -131,12 +133,18 @@ public class Watch implements Runnable {
 			} catch (UnirestException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
 
-				handleListeners(e);
+				notifyErrors(e);
 
 				return;
 			}
 
 			lastUpdate = thisUpdate;
+		}
+
+		if (error) {
+			error = false;
+
+			notifyResolved();
 		}
 	}
 
@@ -275,9 +283,19 @@ public class Watch implements Runnable {
 		}
 	}
 
-	private void handleListeners(Exception e) {
+	private void notifyErrors(Exception e) {
+		if (!error) {
+			error = true;
+
+			for (WatchListener listener : listeners) {
+				listener.notifyErrors(e);
+			}
+		}
+	}
+
+	private void notifyResolved() {
 		for (WatchListener listener : listeners) {
-			listener.handle(e);
+			listener.notifyResolved();
 		}
 	}
 

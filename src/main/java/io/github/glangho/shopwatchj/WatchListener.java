@@ -4,6 +4,8 @@ public interface WatchListener {
 
 	public void listen(WatchEvent event);
 
-	public void handle(Exception e);
+	public void notifyErrors(Exception e);
+
+	public void notifyResolved();
 
 }

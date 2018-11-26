@@ -297,16 +297,36 @@ public class DiscordListener implements WatchListener {
 	}
 
 	@Override
-	public void handle(Exception e) {
+	public void notifyErrors(Exception e) {
 		if (notifyErrors) {
+			WebHook webHook = new WebHook();
+			webHook.setContent("Uh-Oh, shopwatchj is experiencing technical difficulties.  "
+					+ "Please check server logs for details.  Attempting to reestablish connectivity...");
+
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
 			String fullStackTrace = sw.toString();
 
-			WebHook error = new WebHook();
-			error.setContent(fullStackTrace.substring(0, WebHook.MAX_CONTENT_LENGTH));
+			Embed embed = new Embed();
+			embed.setDescription(
+					"```java\n" + fullStackTrace.substring(0, (Embed.MAX_DESCRIPTION_LENGTH - 48)) + "```");
 
-			send(error);
+			List<Embed> embeds = new ArrayList<>();
+			embeds.add(embed);
+
+			webHook.setEmbeds(embeds);
+
+			send(webHook);
+		}
+	}
+
+	@Override
+	public void notifyResolved() {
+		if (notifyErrors) {
+			WebHook resolved = new WebHook();
+			resolved.setContent("Good news, everyone!  Everything seems to be in order.");
+
+			send(resolved);
 		}
 	}
 
