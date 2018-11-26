@@ -161,9 +161,7 @@ public class DiscordListener implements WatchListener {
 						LOGGER.log(Level.WARNING, e.getMessage(), e);
 					}
 				} catch (InterruptedException e) {
-					if (lastAttempt) {
-						throw new RuntimeException(e);
-					}
+					throw new RuntimeException(e);
 				}
 			}
 		} else {
