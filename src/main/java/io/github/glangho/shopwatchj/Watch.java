@@ -111,6 +111,9 @@ public class Watch implements Runnable {
 				tmpUrls = WatchUtil.get(SiteQueue.class, url).getBody();
 			} catch (UnirestException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
+
+				handleListeners(e);
+
 				return;
 			}
 
@@ -127,6 +130,9 @@ public class Watch implements Runnable {
 				refreshProducts(currentCycle);
 			} catch (UnirestException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
+
+				handleListeners(e);
+
 				return;
 			}
 
@@ -266,6 +272,12 @@ public class Watch implements Runnable {
 	private void notifyListeners(WatchEvent watchEvent) {
 		for (WatchListener listener : listeners) {
 			listener.listen(watchEvent);
+		}
+	}
+
+	private void handleListeners(Exception e) {
+		for (WatchListener listener : listeners) {
+			listener.handle(e);
 		}
 	}
 

@@ -8,6 +8,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
@@ -26,6 +28,8 @@ import io.github.glangho.shopwatchj.shopify.Variant;
 import io.github.glangho.shopwatchj.util.WatchUtil;
 
 public class DiscordListener implements WatchListener {
+	private final static Logger LOGGER = Logger.getLogger(DiscordListener.class.getName());
+
 	public static final String MAX_SLEEP_DEFAULT = "3000";
 	public static final String MAX_EVENTS_DEFAULT = "10";
 	public static final String RATE_LIMIT_DEFAULT = "5";
@@ -134,7 +138,8 @@ public class DiscordListener implements WatchListener {
 						send(webHook);
 					} else if (status / 100 != 2) {
 						if (lastAttempt) {
-							throw new RuntimeException("HTTP " + status + " " + response.getStatusText());
+							LOGGER.warning("HTTP " + status + " " + response.getStatusText());
+							return;
 						} else {
 							continue;
 						}
@@ -153,7 +158,7 @@ public class DiscordListener implements WatchListener {
 					return;
 				} catch (UnirestException e) {
 					if (lastAttempt) {
-						throw new RuntimeException(e);
+						LOGGER.log(Level.WARNING, e.getMessage(), e);
 					}
 				} catch (InterruptedException e) {
 					if (lastAttempt) {
